@@ -1,0 +1,70 @@
+edit gluing
+
+ tool pen ;Define the type of the end effector
+
+ ;Input variables
+ sensemptgun=1009 ;Signal for detecting that the gun is empty
+ sensfullgun=1010 ;Signal for detecting that the gun is full
+
+ ;Variables
+ distshift=10 ;Distance for shifting the rectangle
+ dist=50 ;Distance
+
+ reacti sensemptgun, refillgun , 100 ;Interrupt if the gun is empty, call the
+subroutine
+
+ appro board:A,dist ;Approach the first location of the current rectangle
+ moves board:A ;Place the gun at the first location
+ closei ;Start gluing
+
+ ;Move from corner to corner with break to make sharp edges
+ moves board:B
+ break
+ moves board:C
+ break
+ moves board:D
+ break
+ moves board:A
+
+ openi ;Stop gluing
+
+ ;Define the corners of the new rectangle
+ set A=shift(A by distshift,distshift,0)
+ set B=shift(B by distshift,distshift,0)
+ set C=shift(C by distshift,distshift,0)
+ set D=shift(D by distshift,distshift,0)
+
+ e
+
+ ;Define subroutine for filling the gun
+ edit refillgun
+ openi
+ set currentpen.loc=here ;Save the gun location at the interrupt
+ set nextedge=dest ;Save the destination of the next corner at the interrupt
+
+ ;Input variables
+ sensfullgun=1010
+
+ ;Variables
+ dist=50
+
+ ;Approach and move to the predefined refill location
+ depart dist
+ appro recharge,dist
+ moves recharge
+
+ wait sig(sensfullgun) ;Wait till the gun is completely filled
+
+ ;Approach and move to the saved location to complete the interrupted movement
+ depart dist
+ appro currentpen.loc, dist
+ moves currentpen.loc
+ closei
+ moves nextedge
+ break
+
+ return
+ e
+
+ load glue.lc
+ load alltools.v2
